@@ -19,7 +19,7 @@ import (
 type A25 [25]byte
 
 func (a *A25) Version() byte {
-	return a[0]
+	return a[30]
 }
 
 func (a *A25) EmbeddedChecksum() (c [4]byte) {

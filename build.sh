@@ -9,5 +9,5 @@ go get btcplex btcplex-server btcplex-prod btcplex-blocknotify
 go install btcplex-server btcplex-prod btcplex-blocknotify
 
 rm $GOPATH/src/btcplex -rf
-rm $GOPATH/src/btcplex-* -rf
+rm $GOPATH/btcplex-* -rf
 export GOBIN=$OLD_GOBIN
