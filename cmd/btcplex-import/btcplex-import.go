@@ -157,7 +157,7 @@ func main() {
 	sem := make(chan bool, concurrency)
 
 	// Real network magic byte
-	blockchain, blockchainerr := blkparser.NewBlockchain(conf.BitcoindBlocksPath, [4]byte{0xF9, 0xBE, 0xB4, 0xD9})
+	blockchain, blockchainerr := blkparser.NewBlockchain(conf.BitcoindBlocksPath, [4]byte{0xFA, 0xC3, 0xB6, 0xDA})
 	if blockchainerr != nil {
 		log.Fatalf("Error loading block file: ", blockchainerr)
 	}
