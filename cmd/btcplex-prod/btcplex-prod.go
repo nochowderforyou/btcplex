@@ -10,7 +10,7 @@ import (
 
 	"github.com/docopt/docopt.go"
 
-	btcplex "github.com/tsileo/btcplex/pkg"
+	btcplex "github.com/l0rdicon/btcplex/pkg"
 )
 
 func main() {
