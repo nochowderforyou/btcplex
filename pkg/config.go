@@ -7,8 +7,8 @@ import (
 
 // Struct holding our configuration
 type Config struct {
-	BitcoindBlocksPath string `json:"digibyted_blocks_path"`
-	BitcoindRpcUrl     string `json:"digibyted_rpc_url"`
+	BitcoindBlocksPath string `json:"bitcoind_blocks_path"`
+	BitcoindRpcUrl     string `json:"bitcoind_rpc_url"`
 	SsdbHost           string `json:"ssdb_host"`
 	RedisHost          string `json:"redis_host"`
 	LevelDbPath        string `json:"leveldb_path"`
