@@ -1,10 +1,10 @@
 {
-	"bitcoind_rpc_url": "http://user:pass@localhost:14022",
-	"bitcoind_blocks_path": "/home/scott/.digibyte",
+	"bitcoind_rpc_url": "http://xploited:xploited1122@localhost:14022",
+	"bitcoind_blocks_path": "/root/.digibyte",
 	"redis_host": "localhost:6379",
 	"ssdb_host": "localhost:6381",
 	"leveldb_path": "/usr/local/lib",
-	"app_url": "https://localhost",
+	"app_url": "https://192.168.2.13",
 	"app_port": 6033,
 	"app_api_rate_limited": true,
 	"app_templates_path": "templates"
