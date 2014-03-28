@@ -19,7 +19,7 @@ import (
 type A25 [25]byte
 
 func (a *A25) Version() byte {
-	return a[30]
+	return a[0]
 }
 
 func (a *A25) EmbeddedChecksum() (c [4]byte) {
@@ -83,7 +83,7 @@ func ValidA58(a58 []byte) (ok bool, err error) {
 	if err := a.Set58(a58); err != nil {
 		return false, err
 	}
-	if a.Version() != 0 {
+	if a.Version() != 30 {
 		return false, errors.New("not version 0")
 	}
 	return a.EmbeddedChecksum() == a.ComputeChecksum(), nil
