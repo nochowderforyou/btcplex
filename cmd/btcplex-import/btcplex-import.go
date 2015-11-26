@@ -41,6 +41,8 @@ type Tx struct {
 	Size        uint32   `json:"size"`
 	LockTime    uint32   `json:"lock_time"`
 	Version     uint32   `json:"ver"`
+	Time        uint32   `json:"time"`
+	Comment     string   `json:"clam-speech"`
 	TxInCnt     uint32   `json:"vin_sz"`
 	TxOutCnt    uint32   `json:"vout_sz"`
 	TxIns       []*TxIn  `json:"in" bson:"-"`
@@ -407,6 +409,8 @@ func main() {
 			ntx.Size = tx.Size
 			ntx.LockTime = tx.LockTime
 			ntx.Version = tx.Version
+			ntx.Time = tx.Time
+			ntx.Comment = tx.Comment
 			ntx.TxInCnt = uint32(len(txis))
 			ntx.TxOutCnt = uint32(len(txos))
 			ntx.TotalOut = uint64(total_tx_out)
@@ -420,6 +424,7 @@ func main() {
 			conn.Do("SET", ntxjsonkey, ntxjson)
 			conn.Do("ZADD", fmt.Sprintf("tx:%v:blocks", tx.Hash), bl.BlockTime, bl.Hash)
 			conn.Do("ZADD", fmt.Sprintf("block:%v:txs", block.Hash), tx_index, ntxjsonkey)
+			conn.Do("ZADD", fmt.Sprintf("speech:%v", tx.Comment), block_height, tx.Hash)
 
 			ntx.TxIns = txis
 			ntx.TxOuts = txos

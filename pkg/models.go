@@ -33,6 +33,8 @@ type Tx struct {
 	Size            uint32                       `json:"size"`
 	LockTime        uint32                       `json:"lock_time"`
 	Version         uint32                       `json:"ver"`
+	Time            uint32                       `json:"time"`
+	Comment         string                       `json:"clam-speech"`
 	TxInCnt         uint32                       `json:"vin_sz"`
 	TxOutCnt        uint32                       `json:"vout_sz"`
 	TxIns           []*TxIn                      `json:"in"`

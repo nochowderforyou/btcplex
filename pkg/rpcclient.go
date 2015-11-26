@@ -71,15 +71,15 @@ func GetBlockCountRPC(conf *Config) uint {
 }
 
 type BitcoindInfo struct {
-	Version int64 `json:"version"`
-	ProtocolVersion int64 `json:"protocolversion"`
-	Blocks int64 `json:"blocks"`
-	TimeOffset int64 `json:"timeoffset"`
-	Connections int64 `json:"connections"`
-	Proxy string `json:"proxy"`
-	Difficulty float64 `json:"difficulty"`
-	Testnet bool `json:"testnet"`
-	Errors string `json:"errors"`
+	Version         int64   `json:"version"`
+	ProtocolVersion int64   `json:"protocolversion"`
+	Blocks          int64   `json:"blocks"`
+	TimeOffset      int64   `json:"timeoffset"`
+	Connections     int64   `json:"connections"`
+	Proxy           string  `json:"proxy"`
+	Difficulty      float64 `json:"difficulty"`
+	Testnet         bool    `json:"testnet"`
+	Errors          string  `json:"errors"`
 }
 
 func GetInfoRPC(conf *Config) (bitcoindinfo *BitcoindInfo, err error) {
@@ -260,6 +260,9 @@ func GetTxRPC(conf *Config, tx_id string, block *Block) (tx *Tx, err error) {
 	tx.BlockHash = block.Hash
 	vertmp, _ := txjson["version"].(json.Number).Int64()
 	tx.Version = uint32(vertmp)
+	txtimetmp, _ := txjson["time"].(json.Number).Int64()
+	tx.Time = uint32(txtimetmp)
+	tx.Comment = txjson["clam-speech"].(string)
 	ltimetmp, _ := txjson["locktime"].(json.Number).Int64()
 	tx.LockTime = uint32(ltimetmp)
 	tx.Size = uint32(len(txjson["hex"].(string)) / 2)
@@ -356,6 +359,9 @@ func SaveTxFromRPC(conf *Config, pool *redis.Pool, tx_id string, block *Block, t
 	ltimetmp, _ := txjson["locktime"].(json.Number).Int64()
 	tx.LockTime = uint32(ltimetmp)
 	tx.Size = uint32(len(txjson["hex"].(string)) / 2)
+	txtimetmp, _ := txjson["time"].(json.Number).Int64()
+	tx.Time = uint32(txtimetmp)
+	tx.Comment = txjson["clam-speech"].(string)
 
 	total_tx_out := uint64(0)
 	total_tx_in := uint64(0)
@@ -477,6 +483,7 @@ func SaveTxFromRPC(conf *Config, pool *redis.Pool, tx_id string, block *Block, t
 	c.Do("SET", ntxjsonkey, ntxjson)
 	c.Do("ZADD", fmt.Sprintf("block:%v:txs", block.Hash), tx_index, ntxjsonkey)
 	c.Do("ZADD", fmt.Sprintf("tx:%v:blocks", tx.Hash), tx.BlockTime, block.Hash)
+	c.Do("ZADD", fmt.Sprintf("speech:%v", tx.Comment), tx.BlockHeight, tx.Hash)
 	return
 }
 
