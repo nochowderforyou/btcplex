@@ -22,5 +22,7 @@ func (tx *Tx) Revert(spool *redis.Pool) (err error) {
 		ssdb.Do("ZREM", fmt.Sprintf("addr:%v:received", txo.Addr), tx.Hash)
 	}
 
+	ssdb.Do("ZREM", fmt.Sprintf("speech:%v", tx.Comment), tx.Hash)
+
 	return
 }
