@@ -13,7 +13,7 @@ import (
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/jmhodges/levigo"
-	blkparser "github.com/l0rdicon/blkparser"
+	blkparser "github.com/nochowderforyou/blkparser"
 
 	"btcplex"
 )
