@@ -108,7 +108,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Can't load config file: %v", err)
 	}
-	pool, err := btcplex.GetSSDB(conf)
+	pool, err := btcplex.GetRedis(conf)
 	if err != nil {
 		log.Fatalf("Can't connect to SSDB: %v", err)
 	}
@@ -159,7 +159,7 @@ func main() {
 	sem := make(chan bool, concurrency)
 
 	// Real network magic byte
-	blockchain, blockchainerr := blkparser.NewBlockchain(conf.BitcoindBlocksPath, [4]byte{0xFA, 0xC3, 0xB6, 0xDA})
+	blockchain, blockchainerr := blkparser.NewBlockchain(conf.BitcoindBlocksPath, [4]byte{0x03, 0x22, 0x35, 0x15})
 	if blockchainerr != nil {
 		log.Fatalf("Error loading block file: ", blockchainerr)
 	}
@@ -195,6 +195,9 @@ func main() {
 			for {
 				prevkey := fmt.Sprintf("height:%v", prevheight)
 				prevcnt, _ := redis.Int(conn.Do("ZCARD", prevkey))
+				if prevcnt == 0 {
+					panic(fmt.Sprintf("Zero previous blocks for height %v", block_height))
+				}
 				// SSDB doesn't support negative slice yet
 				prevs, _ := redis.Strings(conn.Do("ZRANGE", prevkey, 0, prevcnt-1))
 				for _, cprevhash := range prevs {

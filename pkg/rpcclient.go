@@ -14,7 +14,7 @@ import (
 	"sync/atomic"
 )
 
-const GenesisTx = "4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"
+const GenesisTx = "ef10b32afd53e4a6ebb8bdb0486c6acbe9b43afe3dfa538e913b89bb1319ff96"
 
 // Helper to make call to bitcoind RPC API
 func CallBitcoinRPC(address string, method string, id interface{}, params []interface{}) (map[string]interface{}, error) {
