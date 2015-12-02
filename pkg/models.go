@@ -17,6 +17,7 @@ type Block struct {
 	Bits       uint32 `json:"bits"`
 	Nonce      uint32 `json:"nonce"`
 	Size       uint32 `json:"size"`
+	BlockSig   string `json:"signature"`
 	TxCnt      uint32 `json:"n_tx"`
 	TotalBTC   uint64 `json:"total_out"`
 	//    BlockReward float64 `json:"-"`
@@ -95,6 +96,11 @@ type BlockMeta struct {
 	Height int    `redis:"height"`
 }
 
+type ClamSpeech struct {
+	Comment  string
+	Speeches map[string]uint
+}
+
 // Return block reward at the given height
 func GetBlockReward(height uint) uint {
 	return 50e8 >> (height / 210000)
@@ -132,6 +138,13 @@ func GetBlockCachedByHash(rpool *redis.Pool, hash string) (block *Block, err err
 	block = new(Block)
 	err = json.Unmarshal([]byte(blockjson), block)
 	return
+}
+
+func (block *Block) IsProofOfStake() bool {
+	if len(block.Txs) > 1 && block.Txs[1].IsCoinStake() {
+		return true
+	}
+	return false
 }
 
 // TODO UpdateTxoSpent
@@ -193,6 +206,16 @@ func GetTx(rpool *redis.Pool, hash string) (tx *Tx, err error) {
 	err = json.Unmarshal([]byte(txjson), tx)
 	tx.Build(rpool)
 	return
+}
+
+func (tx *Tx) IsCoinStake() bool {
+	if len(tx.TxIns) > 0 &&
+		!(tx.TxIns[0].PrevOut.Hash == fmt.Sprintf("%064x", 0) && tx.TxIns[0].PrevOut.Vout == ^uint32(0)) &&
+		len(tx.TxOuts) >= 2 &&
+		(tx.TxOuts[0].Value == 0 && tx.TxOuts[0].Addr == "") {
+		return true
+	}
+	return false
 }
 
 // Fetch Txos and Txins
