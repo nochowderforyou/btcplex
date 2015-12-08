@@ -262,7 +262,10 @@ func GetTxRPC(conf *Config, tx_id string, block *Block) (tx *Tx, err error) {
 	tx.Version = uint32(vertmp)
 	txtimetmp, _ := txjson["time"].(json.Number).Int64()
 	tx.Time = uint32(txtimetmp)
-	tx.Comment = txjson["clam-speech"].(string)
+	comment := txjson["clam-speech"]
+	if comment != nil {
+		tx.Comment = txjson["clam-speech"].(string)
+	}
 	ltimetmp, _ := txjson["locktime"].(json.Number).Int64()
 	tx.LockTime = uint32(ltimetmp)
 	tx.Size = uint32(len(txjson["hex"].(string)) / 2)
@@ -361,7 +364,10 @@ func SaveTxFromRPC(conf *Config, pool *redis.Pool, tx_id string, block *Block, t
 	tx.Size = uint32(len(txjson["hex"].(string)) / 2)
 	txtimetmp, _ := txjson["time"].(json.Number).Int64()
 	tx.Time = uint32(txtimetmp)
-	tx.Comment = txjson["clam-speech"].(string)
+	comment := txjson["clam-speech"]
+	if comment != nil {
+		tx.Comment = txjson["clam-speech"].(string)
+	}
 
 	total_tx_out := uint64(0)
 	total_tx_in := uint64(0)
