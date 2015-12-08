@@ -140,7 +140,7 @@ func main() {
 	log.Println("Waiting 3 seconds before starting...")
 	time.Sleep(3 * time.Second)
 
-	latestheight := 0
+	latestheight, _ := redis.Int(conn.Do("GET", "height:latest"))
 	log.Printf("Latest height: %v\n", latestheight)
 
 	running = true
@@ -189,6 +189,11 @@ func main() {
 			parentheight, _ := redis.Int(conn.Do("HGET", fmt.Sprintf("block:%v:h", bl.Parent), "height"))
 			block_height = uint(parentheight + 1)
 			conn.Do("HSET", fmt.Sprintf("block:%v:h", bl.Hash), "height", block_height)
+			// Record the block's position in the block data file for late syncing.
+			if block_height > 0 && block_height%1000 == 0 {
+				conn.Do("HMSET", fmt.Sprintf("import:%v", block_height), "fileId", bl.Pos.FileId, "pos", bl.Pos.Pos)
+			}
+
 			prevheight := block_height - 1
 			prevhashtest := bl.Parent
 			prevnext := bl.Hash
@@ -232,6 +237,23 @@ func main() {
 
 		if latestheight != 0 && !(latestheight+1 <= int(block_height)) {
 			log.Printf("Skipping block #%v\n", block_height)
+
+			// Load checkpoint if possible
+			lastCheckpointHeight := latestheight / 1000 * 1000
+			lastPos := new(blkparser.BlockPos)
+			lastPosData, err := redis.Values(conn.Do("HGETALL", fmt.Sprintf("import:%v", lastCheckpointHeight)))
+			if err != nil {
+				continue
+			}
+			err = redis.ScanStruct(lastPosData, lastPos)
+			if err != nil {
+				log.Printf("Could not load blockchain file checkpoint for block %v\n", lastCheckpointHeight)
+				continue
+			}
+
+			log.Printf("Skipping to block #%v\n", lastCheckpointHeight)
+			blockchain.SkipTo(lastPos.FileId, lastPos.Pos)
+
 			continue
 		}
 
