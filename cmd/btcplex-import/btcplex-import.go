@@ -30,6 +30,7 @@ type Block struct {
 	Size       uint32 `json:"size"`
 	TxCnt      uint32 `json:"n_tx"`
 	TotalBTC   uint64 `json:"total_out"`
+	TotalDug   uint64 `json:"total_dug"`
 	//    BlockReward float64 `json:"-"`
 	Parent string `json:"prev_block"`
 	//    Next        string  `json:"next_block"`
@@ -241,11 +242,13 @@ func main() {
 		txs := []*Tx{}
 
 		total_bl_out := uint64(0)
+		total_bl_dug := uint64(0)
 		for tx_index, tx := range bl.Txs {
 			//log.Printf("Tx #%v: %v\n", tx_index, tx.Hash)
 
 			total_tx_out := uint64(0)
 			total_tx_in := uint64(0)
+			total_tx_dug := uint64(0)
 
 			//conn.Send("MULTI")
 			txos := []*btcplex.TxOut{}
@@ -309,7 +312,7 @@ func main() {
 				for txi_index, txi := range tx.TxIns {
 					txwg.Add(1)
 					sem <- true
-					go func(txi *blkparser.TxIn, bl *blkparser.Block, tx *blkparser.Tx, pool *redis.Pool, total_tx_in *uint64, txi_index int) {
+					go func(txi *blkparser.TxIn, bl *blkparser.Block, tx *blkparser.Tx, pool *redis.Pool, total_tx_in *uint64, total_tx_dug *uint64, txi_index int) {
 						conn := pool.Get()
 						defer conn.Close()
 						defer func() {
@@ -388,8 +391,13 @@ func main() {
 						conn.Do("HINCRBY", fmt.Sprintf("addr:%v:h", nprevout.Address), "ts", nprevout.Value)
 
 						// Dig tracking.
-						conn.Do("SREM", "undug", fmt.Sprintf("txo:%v:%v", txi.InputHash, txi.InputVout))
-					}(txi, bl, tx, pool, &total_tx_in, txi_index)
+						digKey := fmt.Sprintf("txo:%v:%v", txi.InputHash, txi.InputVout)
+						isBuried, _ := redis.Bool(conn.Do("SISMEMBER", "undug", digKey))
+						if isBuried {
+							atomic.AddUint64(total_tx_dug, nprevout.Value)
+							conn.Do("SREM", "undug", digKey)
+						}
+					}(txi, bl, tx, pool, &total_tx_in, &total_tx_dug, txi_index)
 
 				}
 			}
@@ -403,6 +411,7 @@ func main() {
 			txwg.Wait()
 
 			total_bl_out += total_tx_out
+			total_bl_dug += total_tx_dug
 
 			ntx := new(Tx)
 			ntx.Index = uint32(tx_index)
@@ -433,6 +442,7 @@ func main() {
 		}
 
 		block.TotalBTC = uint64(total_bl_out)
+		block.TotalDug = uint64(total_bl_dug)
 		block.TxCnt = uint32(len(txs))
 
 		blockjson, _ := json.Marshal(block)
@@ -441,6 +451,9 @@ func main() {
 		block.Txs = txs
 		blockjsoncache, _ := json.Marshal(block)
 		conn.Do("SET", fmt.Sprintf("block:%v:cached", block.Hash), blockjsoncache)
+
+		// Dig tracking.
+		conn.Do("ZADD", "dug", block.Height, block.TotalDug)
 
 		if !running {
 			log.Printf("Done. Stopped at height: %v.", block_height)

@@ -20,6 +20,7 @@ type Block struct {
 	BlockSig   string `json:"signature"`
 	TxCnt      uint32 `json:"n_tx"`
 	TotalBTC   uint64 `json:"total_out"`
+	TotalDug   uint64 `json:"total_dug"`
 	//    BlockReward float64 `json:"-"`
 	Parent string                       `json:"prev_block"`
 	Next   string                       `json:"next_block"`
@@ -42,6 +43,7 @@ type Tx struct {
 	TxOuts          []*TxOut                     `json:"out"`
 	TotalOut        uint64                       `json:"vout_total"`
 	TotalIn         uint64                       `json:"vin_total"`
+	TotalDug        uint64                       `json:"-"`
 	BlockHash       string                       `json:"block_hash"`
 	BlockHeight     uint                         `json:"block_height"`
 	BlockTime       uint32                       `json:"block_time"`

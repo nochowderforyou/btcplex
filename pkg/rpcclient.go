@@ -174,24 +174,27 @@ func SaveBlockFromRPC(conf *Config, pool *redis.Pool, hash string) (block *Block
 	block.Bits = uint32(blockbits)
 	block.TxCnt = uint32(len(blockjson["tx"].([]interface{})))
 	tout := uint64(0)
+	tdug := uint64(0)
 	txs := []*Tx{}
 	var txmut sync.Mutex
 	for txindex, txjson := range blockjson["tx"].([]interface{}) {
 		sem <- true
 		wg.Add(1)
-		go func(txjson interface{}, tout *uint64, block *Block, txs *[]*Tx) {
+		go func(txjson interface{}, tout *uint64, tdug *uint64, block *Block, txs *[]*Tx) {
 			defer wg.Done()
 			defer func() { <-sem }()
 			tx, _ := SaveTxFromRPC(conf, pool, txjson.(string), block, txindex)
 			//(conf *Config, pool *redis.Pool, tx_id string, block *Block, tx_index int)
 			atomic.AddUint64(tout, tx.TotalOut)
+			atomic.AddUint64(tdug, tx.TotalDug)
 			txmut.Lock()
 			*txs = append(*txs, tx)
 			txmut.Unlock()
-		}(txjson, &tout, block, &txs)
+		}(txjson, &tout, &tdug, block, &txs)
 	}
 	wg.Wait()
 	block.TotalBTC = uint64(tout)
+	block.TotalDug = uint64(tdug)
 
 	c.Do("ZADD", fmt.Sprintf("height:%v", block.Height), block.BlockTime, block.Hash)
 	c.Do("HMSET", fmt.Sprintf("block:%v:h", block.Hash), "parent", block.Parent, "height", block.Height, "main", true)
@@ -202,6 +205,9 @@ func SaveBlockFromRPC(conf *Config, pool *redis.Pool, hash string) (block *Block
 	block.Txs = txs
 	fullblockjson, _ := json.Marshal(block)
 	c.Do("SET", fmt.Sprintf("block:%v:cached", block.Hash), fullblockjson)
+
+	// Dig tracking.
+	c.Do("ZADD", "dug", block.Height, block.TotalDug)
 	return
 }
 
@@ -371,6 +377,7 @@ func SaveTxFromRPC(conf *Config, pool *redis.Pool, tx_id string, block *Block, t
 
 	total_tx_out := uint64(0)
 	total_tx_in := uint64(0)
+	total_tx_dug := uint64(0)
 
 	sem := make(chan bool, 50)
 	for txiindex, txijson := range txjson["vin"].([]interface{}) {
@@ -378,7 +385,7 @@ func SaveTxFromRPC(conf *Config, pool *redis.Pool, tx_id string, block *Block, t
 		if !coinbase {
 			wg.Add(1)
 			sem <- true
-			go func(pool *redis.Pool, txijson interface{}, txiindex int, total_tx_in *uint64, tx *Tx, block *Block) {
+			go func(pool *redis.Pool, txijson interface{}, txiindex int, total_tx_in *uint64, total_tx_dug *uint64, tx *Tx, block *Block) {
 				defer wg.Done()
 				defer func() { <-sem }()
 				c := pool.Get()
@@ -431,9 +438,14 @@ func SaveTxFromRPC(conf *Config, pool *redis.Pool, tx_id string, block *Block, t
 				c.Do("HINCRBY", fmt.Sprintf("addr:%v:h", txinjsonprevout.Address), "ts", txinjsonprevout.Value)
 
 				// Dig tracking.
-				c.Do("SREM", "undug", fmt.Sprintf("txo:%v:%v", txinjsonprevout.Hash, txinjsonprevout.Vout))
+				digKey := fmt.Sprintf("txo:%v:%v", txinjsonprevout.Hash, txinjsonprevout.Vout)
+				isBuried, _ := redis.Bool(c.Do("SISMEMBER", "undug", digKey))
+				if isBuried {
+					atomic.AddUint64(total_tx_dug, uint64(txinjsonprevout.Value))
+					c.Do("SREM", "undug", digKey)
+				}
 
-			}(pool, txijson, txiindex, &total_tx_in, tx, block)
+			}(pool, txijson, txiindex, &total_tx_in, &total_tx_dug, tx, block)
 		}
 	}
 	for txo_index, txojson := range txjson["vout"].([]interface{}) {
@@ -491,6 +503,7 @@ func SaveTxFromRPC(conf *Config, pool *redis.Pool, tx_id string, block *Block, t
 	tx.TxInCnt = uint32(len(tx.TxIns))
 	tx.TotalOut = uint64(total_tx_out)
 	tx.TotalIn = uint64(total_tx_in)
+	tx.TotalDug = uint64(total_tx_dug)
 
 	ntxjson, _ := json.Marshal(tx)
 	ntxjsonkey := fmt.Sprintf("tx:%v", tx.Hash)
