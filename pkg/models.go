@@ -208,11 +208,38 @@ func GetTx(rpool *redis.Pool, hash string) (tx *Tx, err error) {
 	return
 }
 
+// IsEmpty returns whether a TxOut is empty.
+func (txout *TxOut) IsEmpty() bool {
+	if txout.Value == 0 && txout.Addr == "" {
+		return true
+	}
+	return false
+}
+
+// IsNull returns whether a PrevOut is null.
+func (prevout *PrevOut) IsNull() bool {
+	if prevout.Hash == fmt.Sprintf("%064x", 0) && prevout.Vout == ^uint32(0) {
+		return true
+	}
+	return false
+}
+
+// IsCoinBase returns whether a Tx is a coinbase tx.
+func (tx *Tx) IsCoinBase() bool {
+	if len(tx.TxIns) == 1 &&
+		tx.TxIns[0].PrevOut.IsNull() &&
+		len(tx.TxOuts) >= 1 {
+		return true
+	}
+	return false
+}
+
+// IsCoinStake returns whether a Tx is a coinstake tx.
 func (tx *Tx) IsCoinStake() bool {
 	if len(tx.TxIns) > 0 &&
-		!(tx.TxIns[0].PrevOut.Hash == fmt.Sprintf("%064x", 0) && tx.TxIns[0].PrevOut.Vout == ^uint32(0)) &&
+		!tx.TxIns[0].PrevOut.IsNull() &&
 		len(tx.TxOuts) >= 2 &&
-		(tx.TxOuts[0].Value == 0 && tx.TxOuts[0].Addr == "") {
+		tx.TxOuts[0].IsEmpty() {
 		return true
 	}
 	return false
@@ -232,6 +259,21 @@ func (tx *Tx) Build(rpool *redis.Pool) (err error) {
 	for _, txinjson := range txinsjson {
 		ctxi := new(TxIn)
 		err = json.Unmarshal([]byte(txinjson), ctxi)
+		tx.TxIns = append(tx.TxIns, ctxi)
+	}
+	// Null input in null tx of PoS blocks.
+	if len(tx.TxIns) == 0 {
+		ctxiprev := &PrevOut{
+			Hash: fmt.Sprintf("%064x", 0),
+			Vout: ^uint32(0),
+		}
+		ctxi := &TxIn{
+			TxHash:    tx.Hash,
+			BlockHash: tx.BlockHash,
+			BlockTime: tx.BlockTime,
+			PrevOut:   ctxiprev,
+			Index:     0,
+		}
 		tx.TxIns = append(tx.TxIns, ctxi)
 	}
 	txoutskeys := []interface{}{}
