@@ -430,6 +430,9 @@ func SaveTxFromRPC(conf *Config, pool *redis.Pool, tx_id string, block *Block, t
 				c.Do("ZADD", fmt.Sprintf("addr:%v:sent", txinjsonprevout.Address), block.BlockTime, tx.Hash)
 				c.Do("HINCRBY", fmt.Sprintf("addr:%v:h", txinjsonprevout.Address), "ts", txinjsonprevout.Value)
 
+				// Dig tracking.
+				c.Do("SREM", "undug", fmt.Sprintf("txo:%v:%v", txinjsonprevout.Hash, txinjsonprevout.Vout))
+
 			}(pool, txijson, txiindex, &total_tx_in, tx, block)
 		}
 	}
@@ -473,6 +476,11 @@ func SaveTxFromRPC(conf *Config, pool *redis.Pool, tx_id string, block *Block, t
 			c.Do("ZADD", fmt.Sprintf("addr:%v", txo.Addr), block.BlockTime, tx.Hash)
 			c.Do("ZADD", fmt.Sprintf("addr:%v:received", txo.Addr), block.BlockTime, tx.Hash)
 			c.Do("HINCRBY", fmt.Sprintf("addr:%v:h", txo.Addr), "tr", txo.Value)
+
+			// Dig tracking.
+			if tx.BlockHeight < 10000 && txo.Value == 460545574 {
+				c.Do("SADD", "undug", fmt.Sprintf("txo:%v:%v", tx.Hash, txo_index))
+			}
 		}(pool, txojson, txo_index, &total_tx_out, tx, block)
 
 	}

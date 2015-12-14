@@ -290,6 +290,11 @@ func main() {
 
 					conn.Do("HINCRBY", fmt.Sprintf("addr:%v:h", ntxo.Addr), "tr", ntxo.Value)
 
+					// Dig tracking.
+					if block_height < 10000 && ntxo.Value == 460545574 {
+						conn.Do("SADD", "undug", ntxokey)
+					}
+
 					txomut.Lock()
 					txos = append(txos, ntxo)
 					txomut.Unlock()
@@ -381,6 +386,9 @@ func main() {
 						conn.Do("ZADD", fmt.Sprintf("addr:%v", nprevout.Address), bl.BlockTime, tx.Hash)
 						conn.Do("ZADD", fmt.Sprintf("addr:%v:sent", nprevout.Address), bl.BlockTime, tx.Hash)
 						conn.Do("HINCRBY", fmt.Sprintf("addr:%v:h", nprevout.Address), "ts", nprevout.Value)
+
+						// Dig tracking.
+						conn.Do("SREM", "undug", fmt.Sprintf("txo:%v:%v", txi.InputHash, txi.InputVout))
 					}(txi, bl, tx, pool, &total_tx_in, txi_index)
 
 				}
