@@ -15,14 +15,18 @@
     <dt>Received Transactions</dt>
     <dd>{{.ReceivedCnt}}</dd>
 
+    {{if .ReceivedCnt}}
     <dt>Total Received</dt>
     <dd>{{.TotalReceived | tobtc}}</dd>
+    {{end}}
 
     <dt>Sent Transactions</dt>
     <dd>{{.SentCnt}}</dd>
 
+    {{if .SentCnt}}
     <dt>Total Sent</dt>
     <dd>{{.TotalSent | tobtc}}</dd>
+    {{end}}
 
     {{end}}
 
@@ -71,7 +75,11 @@
 
           {{if .TxIns}}
           {{range .TxIns}}
-          <li style="white-space: nowrap;"><a href="/address/{{.PrevOut.Address}}" class="hash">{{.PrevOut.Address}}</a>: {{.PrevOut.Value |tobtc}}</li>
+            {{if .PrevOut.IsNull}}
+              <li style="white-space: nowrap;">Null Input</li>
+            {{else}}
+              <li style="white-space: nowrap;"><a href="/address/{{.PrevOut.Address}}" class="hash">{{.PrevOut.Address}}</a>: {{.PrevOut.Value |tobtc}}</li>
+            {{end}}
           {{end}}
           {{else}}
           <li style="white-space: nowrap;">Generation: {{. | generationmsg}}</li>

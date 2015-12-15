@@ -104,8 +104,21 @@ type ClamSpeech struct {
 }
 
 // Return block reward at the given height
-func GetBlockReward(height uint) uint {
-	return 50e8 >> (height / 210000)
+func GetBlockReward(tx *Tx) (subsidy uint64) {
+	COIN := uint64(100000000)
+	if tx.IsCoinBase() {
+		subsidy = 215652173
+		if tx.BlockHeight < 4551 {
+			subsidy = 3284 * COIN
+		} else if tx.BlockHeight < 9551 {
+			subsidy = 215652173
+		}
+	} else if tx.IsCoinStake() {
+		// TODO: lottery
+		subsidy = 1 * COIN
+	}
+	return subsidy
+	//return 50e8 >> (height / 210000)
 }
 
 // Return block hash for the given height
@@ -241,6 +254,16 @@ func (tx *Tx) IsCoinStake() bool {
 	if len(tx.TxIns) > 0 &&
 		!tx.TxIns[0].PrevOut.IsNull() &&
 		len(tx.TxOuts) >= 2 &&
+		tx.TxOuts[0].IsEmpty() {
+		return true
+	}
+	return false
+}
+
+// IsNull returns whether a Tx is a Proof-of-Stake identifier.
+func (tx *Tx) IsNull() bool {
+	if ((len(tx.TxIns) == 1 && tx.TxIns[0].PrevOut.IsNull()) || len(tx.TxIns) == 0) &&
+		len(tx.TxOuts) == 1 &&
 		tx.TxOuts[0].IsEmpty() {
 		return true
 	}

@@ -23,11 +23,22 @@
   <dt>Time offset</dt>
   <dd>{{.BitcoindInfo.TimeOffset}}</dd>
 
+  <dt>Money supply</dt>
+  <dd>{{.BitcoindInfo.MoneySupply | formatfloat}}</dd>
+
+  <dt>Dig supply</dt>
+  <dd>{{.BitcoindInfo.DigSupply | formatfloat}}</dd>
+
+  <dt>Stake supply</dt>
+  <dd>{{.BitcoindInfo.StakeSupply | formatfloat}}</dd>
+
   <dt>Connections</dt>
   <dd>{{.BitcoindInfo.Connections}}</dd>
 
+  {{if .BitcoindInfo.Proxy}}
   <dt>Proxy</dt>
   <dd>{{.BitcoindInfo.Proxy}}</dd>
+  {{end}}
 
   <dt>Difficulty</dt>
   <dd>{{.BitcoindInfo.Difficulty}}</dd>
@@ -35,6 +46,8 @@
   <dt>Testnet</dt>
   <dd>{{.BitcoindInfo.Testnet}}</dd>
 
+  {{if .BitcoindInfo.Errors}}
   <dt>Errors</dt>
   <dd>{{.BitcoindInfo.Errors}}</dd>
+  {{end}}
 </dl>

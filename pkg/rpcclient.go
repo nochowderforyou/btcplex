@@ -71,10 +71,13 @@ func GetBlockCountRPC(conf *Config) uint {
 }
 
 type BitcoindInfo struct {
-	Version         int64   `json:"version"`
+	Version         string  `json:"version"`
 	ProtocolVersion int64   `json:"protocolversion"`
 	Blocks          int64   `json:"blocks"`
 	TimeOffset      int64   `json:"timeoffset"`
+	MoneySupply     float64 `json:"moneysupply"`
+	DigSupply       float64 `json:"digsupply"`
+	StakeSupply     float64 `json:"stakesupply"`
 	Connections     int64   `json:"connections"`
 	Proxy           string  `json:"proxy"`
 	Difficulty      float64 `json:"difficulty"`
@@ -90,11 +93,14 @@ func GetInfoRPC(conf *Config) (bitcoindinfo *BitcoindInfo, err error) {
 	}
 	jsoninfo := res["result"].(map[string]interface{})
 	bitcoindinfo.ProtocolVersion, _ = jsoninfo["protocolversion"].(json.Number).Int64()
-	bitcoindinfo.Version, _ = jsoninfo["version"].(json.Number).Int64()
+	bitcoindinfo.Version, _ = jsoninfo["version"].(string)
 	bitcoindinfo.Blocks, _ = jsoninfo["blocks"].(json.Number).Int64()
 	bitcoindinfo.TimeOffset, _ = jsoninfo["timeoffset"].(json.Number).Int64()
+	bitcoindinfo.MoneySupply, _ = jsoninfo["moneysupply"].(json.Number).Float64()
+	bitcoindinfo.DigSupply, _ = jsoninfo["digsupply"].(json.Number).Float64()
+	bitcoindinfo.StakeSupply, _ = jsoninfo["stakesupply"].(json.Number).Float64()
 	bitcoindinfo.Connections, _ = jsoninfo["connections"].(json.Number).Int64()
-	bitcoindinfo.Difficulty, _ = jsoninfo["difficulty"].(json.Number).Float64()
+	bitcoindinfo.Difficulty, _ = jsoninfo["difficulty"].(map[string]interface{})["proof-of-stake"].(json.Number).Float64()
 	bitcoindinfo.Proxy = jsoninfo["proxy"].(string)
 	bitcoindinfo.Testnet = jsoninfo["testnet"].(bool)
 	bitcoindinfo.Errors = jsoninfo["errors"].(string)

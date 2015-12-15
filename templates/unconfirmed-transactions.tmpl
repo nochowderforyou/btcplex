@@ -30,7 +30,7 @@
       <tr>
         <td style="vertical-align:middle"><a href="/tx/{{.Hash}}" class="hash">{{cutmiddle .Hash 15}}</a></td>
         <td style="vertical-align:middle">{{. | computefee}}</td>
-        <td style="vertical-align:middle">{{.Size | tokb}}</td>
+        <td style="vertical-align:middle">{{.Size | formatsize}}</td>
         <td style="vertical-align:middle">
         <ul class="list-unstyled">
         {{if .TxIns}}

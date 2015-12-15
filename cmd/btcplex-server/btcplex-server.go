@@ -19,6 +19,7 @@ import (
 	"github.com/codegangsta/martini-contrib/binding"
 	"github.com/codegangsta/martini-contrib/render"
 	"github.com/docopt/docopt.go"
+	"github.com/dustin/go-humanize"
 	"github.com/garyburd/redigo/redis"
 	"github.com/grafov/bcast"
 
@@ -267,19 +268,17 @@ Options:
 		"cutmiddle": func(addr string, length int) string {
 			return fmt.Sprintf("%v...%v", addr[:length], addr[len(addr)-length:])
 		},
-		"tokb": func(size uint32) string {
-			return fmt.Sprintf("%.3f", float32(size)/1024)
-		},
 		"computefee": func(tx *btcplex.Tx) string {
-			if tx.TotalIn == 0 {
+			if tx.TotalIn == 0 || tx.IsCoinStake() {
 				return "0"
 			}
-			return fmt.Sprintf("%v", float32(tx.TotalIn-tx.TotalOut)/1e8)
+			return humanize.Commaf(float64(tx.TotalIn-tx.TotalOut) / 1e8)
+			//return fmt.Sprintf("%v", float32(tx.TotalIn-tx.TotalOut)/1e8)
 		},
 		"generationmsg": func(tx *btcplex.Tx) string {
-			reward := btcplex.GetBlockReward(tx.BlockHeight)
+			reward := btcplex.GetBlockReward(tx)
 			fee := float64(tx.TotalOut-uint64(reward)) / 1e8
-			return fmt.Sprintf("%v BTC + %.8f total fees", float64(reward)/1e8, fee)
+			return fmt.Sprintf("%v CLAM + %.8f total fees", float64(reward)/1e8, fee)
 		},
 		"tobtc": func(val uint64) string {
 			return fmt.Sprintf("%.8f", float64(val)/1e8)
@@ -287,11 +286,20 @@ Options:
 		"inttobtc": func(val int64) string {
 			return fmt.Sprintf("%.8f", float64(val)/1e8)
 		},
+		"formatbits": func(bits uint32) string {
+			return fmt.Sprintf("%#x", bits)
+		},
+		"formatfloat": func(val float64) string {
+			return humanize.Commaf(val)
+		},
 		"formatprevout": func(prevout *btcplex.PrevOut) string {
 			return fmt.Sprintf("%v:%v", prevout.Hash, prevout.Vout)
 		},
+		"formatsize": func(size uint32) string {
+			return humanize.Bytes(uint64(size))
+		},
 		"formattime": func(ts uint32) string {
-			return fmt.Sprintf("%v", time.Unix(int64(ts), 0).UTC())
+			return strings.Replace(fmt.Sprintf("%v", time.Unix(int64(ts), 0).UTC()), " +0000", "", 1)
 		},
 		"formatiso": func(ts uint32) string {
 			return fmt.Sprintf("%v", time.Unix(int64(ts), 0).Format(time.RFC3339))

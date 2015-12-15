@@ -19,7 +19,7 @@
 	<td>{{.BlockTime | formattime}} (<time datetime="{{.BlockTime | formatiso}}"></time>)</td>
 	<td>{{.TxCnt}}</td>
 	<td>{{.TotalBTC | tobtc}}</td>
-	<td>{{.Size | tokb}}</td>
+	<td>{{.Size | formatsize}}</td>
 </tr>
 {{end}}
 </tbody>

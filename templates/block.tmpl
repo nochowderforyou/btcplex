@@ -28,7 +28,7 @@
   <dt>Time</dt>
   <dd>{{.BlockTime | formattime}} (<time datetime="{{.BlockTime | formatiso}}">{{.BlockTime | formattime}}</time>)</dd>
 
-  <dt>Total BTC</dt>
+  <dt>Total CLAM</dt>
   <dd>{{.TotalBTC |tobtc}}</dd>
 
   <dt>Transactions</dt>
@@ -38,13 +38,13 @@
   <dd>{{.Version}}</dd>
 
   <dt>Bits</dt>
-  <dd>{{.Bits}}</dd>
+  <dd>{{.Bits | formatbits}}</dd>
 
   <dt>Nonce</dt>
   <dd>{{.Nonce}}</dd>
 
   <dt>Size</dt>
-  <dd>{{ .Size | tokb }} KB</dd>
+  <dd>{{ .Size | formatsize }}</dd>
 
   <dt class="text-muted">API</dt>
   <dd><a class="text-muted" href="/api/block/{{.Hash}}">JSON</a></dd>
@@ -68,22 +68,36 @@
       <tr>
         <td style="vertical-align:middle"><a href="/tx/{{.Hash}}" class="hash">{{cutmiddle .Hash 15}}</a></td>
         <td style="vertical-align:middle">{{. | computefee}}</td>
-        <td style="vertical-align:middle">{{.Size | tokb}}</td>
+        <td style="vertical-align:middle">{{.Size | formatsize}}</td>
         <td style="vertical-align:middle">
         <ul class="list-unstyled">
-        {{if .TxIns}}
-        {{range .TxIns}}
-        <li style="white-space: nowrap;"><a href="/address/{{.PrevOut.Address}}" class="hash">{{.PrevOut.Address}}</a>: {{.PrevOut.Value |tobtc}}</li>
-        {{end}}
-        {{else}}
-        <li style="white-space: nowrap;">Generation: {{. | generationmsg}}</li>
+        {{if .IsCoinBase}}
+          <li style="white-space: nowrap;">Generation: {{. | generationmsg}}</li>
+        {{else if or (.IsNull) (not .TxIns)}}
+          <li style="white-space: nowrap;">Null Input</li>
+        {{else if .TxIns}}
+          {{range .TxIns}}
+            {{if .PrevOut.IsNull}}
+              <li style="white-spae: nowrap;">Null Input</li>
+            {{else}}
+              <li style="white-space: nowrap;"><a href="/address/{{.PrevOut.Address}}" class="hash">{{.PrevOut.Address}}</a>: {{.PrevOut.Value |tobtc}}</li>
+            {{end}}
+          {{end}}
         {{end}}
         </ul></td>
         
         <td style="vertical-align:middle">
         <ul class="list-unstyled">
-        {{range .TxOuts}}
-        <li style="white-space: nowrap;"><a href="/address/{{.Addr}}" class="hash">{{.Addr}}</a>: {{.Value |tobtc}}</li>
+        {{if .IsNull}}
+          <li style="white-space: nowrap;">Null Output<li>
+        {{else}}
+          {{range .TxOuts}}
+            {{if .IsEmpty}}
+              <li style="white-space: nowrap;">Null Output (CoinStake Identifier)</li>
+            {{else}}
+              <li style="white-space: nowrap;"><a href="/address/{{.Addr}}" class="hash">{{.Addr}}</a>: {{.Value |tobtc}}</li>
+            {{end}}
+          {{end}}
         {{end}}
         </ul>
         </td>
