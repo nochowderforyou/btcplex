@@ -281,13 +281,16 @@ Options:
 			return fmt.Sprintf("%v CLAM + %.8f total fees", float64(reward)/1e8, fee)
 		},
 		"tobtc": func(val uint64) string {
+			if val == 0 {
+				return "0"
+			}
 			return fmt.Sprintf("%.8f", float64(val)/1e8)
 		},
 		"inttobtc": func(val int64) string {
 			return fmt.Sprintf("%.8f", float64(val)/1e8)
 		},
 		"formatbits": func(bits uint32) string {
-			return fmt.Sprintf("%#x", bits)
+			return fmt.Sprintf("%x", bits)
 		},
 		"formatfloat": func(val float64) string {
 			return humanize.Commaf(val)
@@ -296,7 +299,10 @@ Options:
 			return fmt.Sprintf("%v:%v", prevout.Hash, prevout.Vout)
 		},
 		"formatsize": func(size uint32) string {
-			return humanize.Bytes(uint64(size))
+			if size < 1024 {
+				return fmt.Sprintf("%v B", size)
+			}
+			return fmt.Sprintf("%.3f KiB", float32(size)/1024)
 		},
 		"formattime": func(ts uint32) string {
 			return strings.Replace(fmt.Sprintf("%v", time.Unix(int64(ts), 0).UTC()), " +0000", "", 1)
@@ -377,8 +383,8 @@ Options:
 		pm := new(pageMeta)
 		pm.BtcplexSynced = btcplexsynced
 		pm.Blocks = blockscached
-		pm.Title = "Latest Bitcoin blocks"
-		pm.Description = "Open source Bitcoin block chain explorer with JSON API"
+		pm.Title = "Latest CLAM blocks"
+		pm.Description = "Open source CLAM block chain explorer with JSON API"
 		pm.Menu = "latest_blocks"
 		pm.LastHeight = uint(latestheight)
 		pm.Analytics = conf.AppGoogleAnalytics
@@ -391,7 +397,7 @@ Options:
 		currentheight, _ := strconv.ParseUint(params["currentheight"], 10, 0)
 		blocks, _ := btcplex.GetLastXBlocks(db, uint(currentheight), uint(currentheight-30))
 		pm.Blocks = &blocks
-		pm.Title = "Bitcoin blocks"
+		pm.Title = "CLAM blocks"
 		pm.Menu = "blocks"
 		pm.LastHeight = uint(latestheight)
 		pm.CurrentHeight = uint(currentheight)
@@ -407,8 +413,8 @@ Options:
 		block.FetchMeta(db)
 		btcplex.By(btcplex.TxIndex).Sort(block.Txs)
 		pm.Block = block
-		pm.Title = fmt.Sprintf("Bitcoin block #%v", block.Height)
-		pm.Description = fmt.Sprintf("Bitcoin block #%v summary and related transactions", block.Height)
+		pm.Title = fmt.Sprintf("CLAM block #%v", block.Height)
+		pm.Description = fmt.Sprintf("CLAM block #%v summary and related transactions", block.Height)
 		pm.Analytics = conf.AppGoogleAnalytics
 		r.HTML(200, "block", &pm)
 	})
@@ -434,7 +440,7 @@ Options:
 		pm.LastHeight = uint(latestheight)
 		pm.Menu = "utxs"
 		pm.Title = "Unconfirmed transactions"
-		pm.Description = "Transactions waiting to be included in a Bitcoin block, updated in real time."
+		pm.Description = "Transactions waiting to be included in a CLAM block, updated in real time."
 		//utxs, _ := btcplex.GetUnconfirmedTxs(rpool)
 		pm.Txs = &[]*btcplex.Tx{}
 		pm.Analytics = conf.AppGoogleAnalytics
@@ -456,8 +462,8 @@ Options:
 			tx.Build(db)
 		}
 		pm.Tx = tx
-		pm.Title = fmt.Sprintf("Bitcoin transaction %v", tx.Hash)
-		pm.Description = fmt.Sprintf("Bitcoin transaction %v summary.", tx.Hash)
+		pm.Title = fmt.Sprintf("CLAM transaction %v", tx.Hash)
+		pm.Description = fmt.Sprintf("CLAM transaction %v summary.", tx.Hash)
 		pm.Analytics = conf.AppGoogleAnalytics
 		r.HTML(200, "tx", pm)
 	})
@@ -483,8 +489,8 @@ Options:
 		pm.BtcplexSynced = btcplexsynced
 		pm.LastHeight = uint(latestheight)
 		pm.PaginationData = new(PaginationData)
-		pm.Title = fmt.Sprintf("Bitcoin address %v", params["address"])
-		pm.Description = fmt.Sprintf("Transactions and summary for the Bitcoin address %v.", params["address"])
+		pm.Title = fmt.Sprintf("CLAM address %v", params["address"])
+		pm.Description = fmt.Sprintf("Transactions and summary for the CLAM address %v.", params["address"])
 		// AddressData
 		addressdata, _ := btcplex.GetAddress(db, params["address"])
 		pm.AddressData = addressdata
