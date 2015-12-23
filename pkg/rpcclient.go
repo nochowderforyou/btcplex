@@ -516,7 +516,7 @@ func SaveTxFromRPC(conf *Config, pool *redis.Pool, tx_id string, block *Block, t
 	c.Do("SET", ntxjsonkey, ntxjson)
 	c.Do("ZADD", fmt.Sprintf("block:%v:txs", block.Hash), tx_index, ntxjsonkey)
 	c.Do("ZADD", fmt.Sprintf("tx:%v:blocks", tx.Hash), tx.BlockTime, block.Hash)
-	c.Do("ZADD", fmt.Sprintf("speech:%v", tx.Comment), tx.BlockHeight, tx.Hash)
+	c.Do("HSET", fmt.Sprintf("speech:%v", tx.BlockHeight), tx_index, tx.Comment)
 	return
 }
 

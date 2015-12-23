@@ -50,6 +50,7 @@ type pageMeta struct {
 	Analytics      string
 	BtcplexSynced  bool
 	BitcoindInfo   *btcplex.BitcoindInfo
+	ClamourInfo    *btcplex.ClamourInfo
 }
 
 type PaginationData struct {
@@ -310,6 +311,13 @@ Options:
 		"formatiso": func(ts uint32) string {
 			return fmt.Sprintf("%v", time.Unix(int64(ts), 0).Format(time.RFC3339))
 		},
+		"formatlist": func(vals []uint) string {
+			s := make([]string, len(vals))
+			for i, v := range vals {
+				s[i] = strconv.FormatUint(uint64(v), 10)
+			}
+			return strings.Join(s, ", ")
+		},
 		"sub": func(h, p uint) uint {
 			return h - p
 		},
@@ -536,6 +544,14 @@ Options:
 		}
 		addressdata.FetchTxs(db, txperpage*(currentPage-1), txperpage*currentPage)
 		r.JSON(200, addressdata)
+	})
+
+	m.Get("/clamour", func(params martini.Params, r render.Render, db *redis.Pool) {
+		pm := new(pageMeta)
+		pm.Title = "CLAMour"
+		pm.Description = "Status of CLAMour petitions."
+		pm.ClamourInfo, _ = btcplex.GetClamourInfo(db)
+		r.HTML(200, "clamour", pm)
 	})
 
 	m.Get("/about", func(r render.Render) {

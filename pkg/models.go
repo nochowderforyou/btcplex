@@ -98,11 +98,6 @@ type BlockMeta struct {
 	Height int    `redis:"height"`
 }
 
-type ClamSpeech struct {
-	Comment  string
-	Speeches map[string]uint
-}
-
 // Return block reward at the given height
 func GetBlockReward(tx *Tx) (subsidy uint64) {
 	COIN := uint64(100000000)

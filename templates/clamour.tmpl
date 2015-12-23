@@ -1,0 +1,41 @@
+{{with .ClamourInfo}}
+<h2>CLAMour</h2>
+
+<dl class="dl-horizontal">
+  <dt>Start Block</dt>
+  <dd>{{.StartBlock}}</dd>
+
+  <dt>End Block</dt>
+  <dd>{{.EndBlock}}</dd>
+
+  <dt>Petitions</dt>
+  <dd>{{len .Petitions}}</dd>
+</dl>
+
+<h3>Recent Petitions</h3>
+
+<div class="table-responsive">
+<table class="table table-striped table-condensed">
+  <thead>
+    <tr>
+      <th>Petition ID</th>
+      <th>Supporting Blocks</th>
+      <th>Block Count</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{range $pid, $heights := .Petitions}}
+      <tr>
+        <td style="vertical-align:middle">{{$pid}}</td>
+        <td style="vertical-align:middle">
+        {{if $heights}}
+          {{$heights | formatlist}}
+        {{end}}
+        </td>
+        <td style="vertical-align:middle">{{len $heights}}</td>
+      </tr>
+    {{end}}
+  </tbody>
+</table>
+</div>
+{{end}}

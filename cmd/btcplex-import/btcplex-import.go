@@ -434,7 +434,7 @@ func main() {
 			conn.Do("SET", ntxjsonkey, ntxjson)
 			conn.Do("ZADD", fmt.Sprintf("tx:%v:blocks", tx.Hash), bl.BlockTime, bl.Hash)
 			conn.Do("ZADD", fmt.Sprintf("block:%v:txs", block.Hash), tx_index, ntxjsonkey)
-			conn.Do("ZADD", fmt.Sprintf("speech:%v", tx.Comment), block_height, tx.Hash)
+			conn.Do("HSET", fmt.Sprintf("speech:%v", block_height), tx_index, tx.Comment)
 
 			ntx.TxIns = txis
 			ntx.TxOuts = txos
