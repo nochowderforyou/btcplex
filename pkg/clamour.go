@@ -9,8 +9,8 @@ import (
 
 // Petition models the status of a clamour petition.
 type Petition struct {
-	Id     string
-	Blocks []uint
+	Id     string `json:"id"`
+	Blocks []uint `json:"blocks"`
 }
 
 // ClamourPetitions is a named type for sorting purposes.

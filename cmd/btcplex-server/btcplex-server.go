@@ -556,6 +556,12 @@ Options:
 		r.HTML(200, "clamour", pm)
 	})
 
+	m.Get("/api/clamour", func(params martini.Params, r render.Render, db *redis.Pool, req *http.Request) {
+		clamourInfo, _ := btcplex.GetClamourInfo(db)
+		sort.Sort(sort.Reverse(clamourInfo.Petitions))
+		r.JSON(200, clamourInfo)
+	})
+
 	m.Get("/about", func(r render.Render) {
 		pm := new(pageMeta)
 		pm.BtcplexSynced = btcplexsynced
