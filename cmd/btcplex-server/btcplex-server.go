@@ -180,10 +180,9 @@ Options:
 	rediswrapper := new(RedisWrapper)
 	rediswrapper.Pool = pool
 
-	// Use another redis pool because ssdb acts up.
-	ssdb, err := btcplex.GetRedis(conf)
+	ssdb, err := btcplex.GetSSDB(conf)
 	if err != nil {
-		log.Fatalf("Can't connect to Redis: %v\n", err)
+		log.Fatalf("Can't connect to SSDB: %v\n", err)
 	}
 
 	// Setup some pubsub:

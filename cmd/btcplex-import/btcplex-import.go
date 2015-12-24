@@ -77,7 +77,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Can't load config file: %v", err)
 	}
-	pool, err := btcplex.GetRedis(conf)
+	pool, err := btcplex.GetSSDB(conf)
 	if err != nil {
 		log.Fatalf("Can't connect to SSDB: %v", err)
 	}
