@@ -10,6 +10,7 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -549,7 +550,9 @@ Options:
 		pm := new(pageMeta)
 		pm.Title = "CLAMour"
 		pm.Description = "Status of CLAMour petitions."
-		pm.ClamourInfo, _ = btcplex.GetClamourInfo(db)
+		clamourInfo, _ := btcplex.GetClamourInfo(db)
+		sort.Sort(sort.Reverse(clamourInfo.Petitions))
+		pm.ClamourInfo = clamourInfo
 		r.HTML(200, "clamour", pm)
 	})
 

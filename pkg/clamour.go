@@ -7,11 +7,32 @@ import (
 	"strings"
 )
 
+// Petition models the status of a clamour petition.
+type Petition struct {
+	Id     string
+	Blocks []uint
+}
+
+// ClamourPetitions is a named type for sorting purposes.
+type ClamourPetitions []*Petition
+
+func (p ClamourPetitions) Len() int {
+	return len(p)
+}
+
+func (p ClamourPetitions) Swap(i, j int) {
+	p[i], p[j] = p[j], p[i]
+}
+
+func (p ClamourPetitions) Less(i, j int) bool {
+	return len(p[i].Blocks) < len(p[j].Blocks)
+}
+
 // ClamourInfo models the status of recent petitions.
 type ClamourInfo struct {
-	StartBlock uint              `json:"start_block"`
-	EndBlock   uint              `json:"end_block"`
-	Petitions  map[string][]uint `json:"petitions"`
+	StartBlock uint             `json:"start_block"`
+	EndBlock   uint             `json:"end_block"`
+	Petitions  ClamourPetitions `json:"petitions"`
 }
 
 // GetClamourInfo returns the status of CLAMour petitions.
@@ -27,9 +48,10 @@ func GetClamourInfo(rpool *redis.Pool) (info *ClamourInfo, err error) {
 	info = &ClamourInfo{
 		StartBlock: startHeight,
 		EndBlock:   startHeight + 10000,
-		Petitions:  make(map[string][]uint),
+		Petitions:  []*Petition{},
 	}
 
+	petitions := make(map[string][]uint)
 	for _, v := range speeches {
 		// Only coinstake speeches count.
 		if v.Index != 1 {
@@ -40,8 +62,16 @@ func GetClamourInfo(rpool *redis.Pool) (info *ClamourInfo, err error) {
 			continue
 		}
 		for _, pid := range pids {
-			info.Petitions[pid] = append(info.Petitions[pid], v.Height)
+			petitions[pid] = append(petitions[pid], v.Height)
 		}
+	}
+
+	for k, v := range petitions {
+		p := &Petition{
+			Id:     k,
+			Blocks: v,
+		}
+		info.Petitions = append(info.Petitions, p)
 	}
 
 	return

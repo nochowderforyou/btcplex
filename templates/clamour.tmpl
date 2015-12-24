@@ -24,15 +24,15 @@
     </tr>
   </thead>
   <tbody>
-    {{range $pid, $heights := .Petitions}}
+    {{range .Petitions}}
       <tr>
-        <td style="vertical-align:middle">{{$pid}}</td>
+        <td style="vertical-align:middle">{{.Id}}</td>
         <td style="vertical-align:middle">
-        {{if $heights}}
-          {{$heights | formatlist}}
+        {{if .Blocks}}
+          {{.Blocks | formatlist}}
         {{end}}
         </td>
-        <td style="vertical-align:middle">{{len $heights}}</td>
+        <td style="vertical-align:middle">{{len .Blocks}}</td>
       </tr>
     {{end}}
   </tbody>
