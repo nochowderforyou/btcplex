@@ -311,12 +311,21 @@ Options:
 		"formatiso": func(ts uint32) string {
 			return fmt.Sprintf("%v", time.Unix(int64(ts), 0).Format(time.RFC3339))
 		},
-		"formatlist": func(vals []uint) string {
+		"formatblocklist": func(vals []uint) string {
+			truncated := false
+			if len(vals) > 80 {
+				vals = vals[:80]
+				truncated = true
+			}
 			s := make([]string, len(vals))
 			for i, v := range vals {
 				s[i] = strconv.FormatUint(uint64(v), 10)
 			}
-			return strings.Join(s, ", ")
+			retVal := strings.Join(s, ", ")
+			if truncated {
+				retVal += ", ..."
+			}
+			return retVal
 		},
 		"sub": func(h, p uint) uint {
 			return h - p
@@ -339,6 +348,13 @@ Options:
 				return false
 			}
 			return !block.Main
+		},
+		"getremainingblocks": func(petitions btcplex.ClamourPetitions) int {
+			total := 0
+			for _, i := range petitions {
+				total += len(i.Blocks)
+			}
+			return 10000 - total
 		},
 	}
 
